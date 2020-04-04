@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/front.iml" filepath="$PROJECT_DIR$/front.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../la3-back/la3-back.iml" filepath="$PROJECT_DIR$/../la3-back/la3-back.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../la4-front/la4-front.iml" filepath="$PROJECT_DIR$/../la4-front/la4-front.iml" />
+    </modules>
+  </component>
+</project>

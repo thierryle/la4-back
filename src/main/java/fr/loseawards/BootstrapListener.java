@@ -6,15 +6,7 @@ import javax.servlet.annotation.WebListener;
 
 import com.googlecode.objectify.ObjectifyService;
 
-import fr.loseawards.model.Avatar;
-import fr.loseawards.model.Category;
-import fr.loseawards.model.Comment;
-import fr.loseawards.model.Decision;
-import fr.loseawards.model.Global;
-import fr.loseawards.model.Image;
-import fr.loseawards.model.Nomination;
-import fr.loseawards.model.User;
-import fr.loseawards.model.Vote;
+import fr.loseawards.model.*;
 
 @WebListener
 public class BootstrapListener implements ServletContextListener {
@@ -31,6 +23,13 @@ public class BootstrapListener implements ServletContextListener {
         ObjectifyService.register(Comment.class);
         ObjectifyService.register(Vote.class);
         ObjectifyService.register(Decision.class);
+        ObjectifyService.register(ArchiveUser.class);
+        ObjectifyService.register(ArchiveCategory.class);
+        ObjectifyService.register(Archive.class);
+        ObjectifyService.register(ArchiveRank.class);
+        ObjectifyService.register(ArchiveAward.class);
+        ObjectifyService.register(ArchiveRank.class);
+        ObjectifyService.register(ArchiveReport.class);
 	}
 
 	@Override

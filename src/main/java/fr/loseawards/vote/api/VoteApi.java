@@ -136,10 +136,10 @@ public class VoteApi extends AbstractServiceApi {
 	public VoteResultDTO getVoteResult() {
 		VoteResultDTO voteResultDTO = new VoteResultDTO();
 		
-		Map<Long, List<Long>> winnersByCategory = new HashMap<Long, List<Long>>();
+		Map<Long, List<Long>> winnersByCategory = new HashMap<>();
 		voteResultDTO.setWinnersByCategory(winnersByCategory);
 		
-		Map<Long, List<Long>>secondsByCategory = new HashMap<Long, List<Long>>();
+		Map<Long, List<Long>>secondsByCategory = new HashMap<>();
 		voteResultDTO.setSecondsByCategory(secondsByCategory);
 		
 		// Récupération de tous les votes et classement par catégorie
@@ -160,18 +160,17 @@ public class VoteApi extends AbstractServiceApi {
 		
 		// Récupération des décisions et classement par catégorie
 		List<DecisionDTO> decisionsDTO = getDecisionApi().getDecisions();
-		Map<Long, Long> decisionsByCategory = new HashMap<Long, Long>();
+		Map<Long, Long> decisionsByCategory = new HashMap<>();
 		decisionsDTO.forEach(decisionDTO -> {
-//		for (DecisionDTO decisionDTO : decisionsDTO) {
 			decisionsByCategory.put(decisionDTO.getCategoryId(), decisionDTO.getNominatedId());
 		});
 		voteResultDTO.setDecisionsByCategory(decisionsByCategory);
 
 		// Users ayant reçu des votes, toutes catégories confondues (pour départager les vainqueurs)
-		List<Long> allCategoriesNominatedIds = new ArrayList<Long>();
+		List<Long> allCategoriesNominatedIds = new ArrayList<>();
 		
 		// Tous les vainqueurs des différentes catégories (pour trouver ensuite le ou les grands vainqueurs)
-		List<Long> allWinners = new ArrayList<Long>();
+		List<Long> allWinners = new ArrayList<>();
 		
 		// Parcours des catégories
 //		for (Category category: categories) {
@@ -179,7 +178,7 @@ public class VoteApi extends AbstractServiceApi {
 			List<VoteDTO> votesOfOneCategory = votesByCategory.get(category.getId());
 			if (votesOfOneCategory != null) {
 				// Users ayant reçu des votes dans la catégorie courante
-				List<Long> nominatedIds = new ArrayList<Long>();
+				List<Long> nominatedIds = new ArrayList<>();
 				
 				// Recherche des votes de la catégorie courante
 				votesOfOneCategory.stream().filter(vote -> vote.getNominationId() != null).forEach(vote -> {
@@ -250,8 +249,8 @@ public class VoteApi extends AbstractServiceApi {
 		});
 		voteResultDTO.setNbAwardsByUser(nbAwardsByUser);
 		
-		// Ranking
-		Map<Integer, List<Long>> ranking = new LinkedHashMap<Integer, List<Long>>();
+		// Ranking (pour chaque rang, liste des utilisateurs
+		Map<Integer, List<Long>> ranking = new LinkedHashMap<>();
 		Integer rank = new Integer(1);
 		List<Long> finalWinners;
 		
@@ -261,8 +260,16 @@ public class VoteApi extends AbstractServiceApi {
 			finalWinners = voteResultDTO.getLosers();
 		}
 		ranking.put(rank, finalWinners);
+
+		// Le rang suivant dépend du nombre de vainqueurs (ex. si 2 vainqueurs au rang 1, on passe au rang 3)
 		rank = new Integer(rank.intValue() + finalWinners.size());
-		Integer maxNbAwards = nbAwardsByUser.get(finalWinners.get(0));
+
+		Integer maxNbAwards;
+		if (finalWinners.size() >= 1) {
+			maxNbAwards = nbAwardsByUser.get(finalWinners.get(0));
+		} else {
+			maxNbAwards = Integer.valueOf(0);
+		}
 		
 		for (int nbAwards = maxNbAwards.intValue(); nbAwards >= 0; nbAwards--) {
 			// Qui parmi les compétiteurs a le nombre courant de récompenses, à part les Grands Champions ?
@@ -272,7 +279,7 @@ public class VoteApi extends AbstractServiceApi {
 				if (nbAwardsOfOneUser.intValue() == nbAwards && !finalWinners.contains(user.getId())) {
 					currentRankUsers = ranking.get(rank);
 					if (currentRankUsers == null) {
-						currentRankUsers = new ArrayList<Long>();
+						currentRankUsers = new ArrayList<>();
 						ranking.put(rank, currentRankUsers);
 					}
 					currentRankUsers.add(user.getId());
@@ -306,7 +313,6 @@ public class VoteApi extends AbstractServiceApi {
 			getPersistenceService().deleteDecisions();
 			
 			votesDTO.forEach(voteDTO -> {
-//			for (VoteDTO voteDTO : votes) {
 				getPersistenceService().addVote(Converter.fromDTO(voteDTO));
 			});
 			sendNotification(votesDTO.get(0).getVoterId());
@@ -331,6 +337,25 @@ public class VoteApi extends AbstractServiceApi {
 			getCachedVotes().put(votesDTO.get(0).getVoterId(), votesDTO);
 		}
 	}
+
+	/**
+	 * Suppression de tous les votes.
+	 * DELETE http://localhost:8080/_ah/api/loseawards/v1/votes
+	 */
+	@ApiMethod(path = "votes", httpMethod = HttpMethod.DELETE)
+	public void deleteVotes() {
+		getPersistenceService().deleteVotes();
+
+		// Suppression des décisions du président
+		getPersistenceService().deleteDecisions();
+
+		// Mise à jour de la variable globale
+		Global global = getPersistenceService().getGlobalByKey(GlobalKey.VOTERS_IDS.getKey());
+		if (global != null) {
+			global.setValuesIds(null);
+			getPersistenceService().updateGlobal(global);
+		}
+	}
 	
 	/**
 	 * Envoi d'une notification pour un nouveau vote.
@@ -345,11 +370,8 @@ public class VoteApi extends AbstractServiceApi {
 		String message = builder.toString();
 		
 		if (voter != null) {
-			users.forEach(user -> {
-//			for (User user : users) {
-				if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-					sendMail(user.getEmail(), user.getDisplayName(), "Nouveau vote", message, true);
-				}
+			users.stream().filter(user -> user.getEmail() != null && !user.getEmail().isEmpty()).forEach(user -> {
+				sendMail(user.getEmail(), user.getDisplayName(), "Nouveau vote", message, true);
 			});
 		}
 		return message.toString();

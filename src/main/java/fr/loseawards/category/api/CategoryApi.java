@@ -16,7 +16,7 @@ public class CategoryApi extends AbstractServiceApi {
 	/**
 	 * Récupère une catégorie.
 	 * GET http://localhost:8080/_ah/api/loseawards/v1/categories/6641050231767040
-	 * @param userId
+	 * @param categoryId
 	 * @return
 	 */
 	@ApiMethod(path = "categories/{categoryId}", httpMethod = HttpMethod.GET)
@@ -45,7 +45,7 @@ public class CategoryApi extends AbstractServiceApi {
 	/**
 	 * Crée une catégorie.
 	 * POST http://localhost:8080/_ah/api/loseawards/v1/categories
-	 * @param userDTO
+	 * @param categoryDTO
 	 * @return
 	 */
 	@ApiMethod(path = "categories", httpMethod = HttpMethod.POST)
@@ -68,7 +68,7 @@ public class CategoryApi extends AbstractServiceApi {
 	
 	/**
 	 * Supprime toutes les catégories.
-	 * DELETE http://localhost:8080/_ah/api/loseawards/v1/categories/6641050231767040
+	 * DELETE http://localhost:8080/_ah/api/loseawards/v1/categories
 	 */
 	@ApiMethod(path = "categories", httpMethod = HttpMethod.DELETE)
 	public void deleteCategories() {
@@ -77,7 +77,7 @@ public class CategoryApi extends AbstractServiceApi {
 	
 	/**
 	 * Met à jour une catégorie.
-	 * PUT http://localhost:8080/_ah/api/loseawards/v1/users/6641050231767040
+	 * PUT http://localhost:8080/_ah/api/loseawards/v1/categories/6641050231767040
 	 * @param categoryId
 	 * @param categoryDTO
 	 * @return

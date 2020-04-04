@@ -176,7 +176,7 @@ public class NominationApi extends AbstractServiceApi {
 			nominations.forEach(nomination -> {
 				if (nomination.getCategoryId().equals(category.getId())) {
 					message.append("      <li>");
-					message.append(Util.getUsersNames(users, nomination.getUsersIdsAsList())); 
+					message.append(Util.getUsersNames(users, nomination.getUsersIdsAsLong()));
 					message.append(" (");
 					message.append(nomination.getReason());
 					message.append(")</li>\n");
@@ -201,7 +201,7 @@ public class NominationApi extends AbstractServiceApi {
 		Category category = getPersistenceService().getCategory(nomination.getCategoryId());
 		
 		StringBuilder message = new StringBuilder("<p>");
-		message.append(Util.getUsersNames(users, nomination.getUsersIdsAsList()));
+		message.append(Util.getUsersNames(users, nomination.getUsersIdsAsLong()));
 		if (nomination.getUsersIds().size() > 1) {
 			message.append(" ont été nominés dans la catégorie ");
 		} else {

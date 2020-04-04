@@ -83,7 +83,11 @@ public class Nomination {
 		this.usersIds = usersIds;
 	}
 
-	public List<Long> getUsersIdsAsList() {
+	public void setUsersIdsAsLong(List<Long> usersIds) {
+		this.usersIds = usersIds.stream().map(userId -> Key.create(User.class, userId)).collect(Collectors.toList());
+	}
+
+	public List<Long> getUsersIdsAsLong() {
 		if (this.usersIds != null) {
 			return this.usersIds.stream().map(userId -> userId.getId()).collect(Collectors.toList());
 		}

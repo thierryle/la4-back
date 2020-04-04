@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Classe contenant les données nécessaires à l'écran des images.
+ * Commentaire regroupés par nomination.
  */
 public class CommentBundleDTO implements Serializable {
 	private static final long serialVersionUID = -215495379664017010L;

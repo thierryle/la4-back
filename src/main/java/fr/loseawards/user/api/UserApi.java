@@ -129,14 +129,14 @@ public class UserApi extends AbstractServiceApi {
 		nominations.forEach(nomination -> {
 //		for (Nomination nomination : nominations) {
 			if (nomination.getUsersIds() != null) {
-				nomination.getUsersIdsAsList().forEach(userId -> {
+				nomination.getUsersIdsAsLong().forEach(userId -> {
 //				for (Long userId : nomination.getUsersIdsAsList()) {
 					List<NominationDTO> nominationsOfOneUser = nominationsByUser.get(userId);
 					if (nominationsOfOneUser == null) {
 						nominationsOfOneUser = new ArrayList<NominationDTO>();
 						nominationsByUser.put(userId, nominationsOfOneUser);
 					}
-					nominationsOfOneUser.add(new NominationDTO(nomination.getId(), nomination.getUsersIdsAsList(), nomination.getCategoryId(), nomination.getReason(), nomination.getDate(), nomination.getImageId()));
+					nominationsOfOneUser.add(new NominationDTO(nomination.getId(), nomination.getUsersIdsAsLong(), nomination.getCategoryId(), nomination.getReason(), nomination.getDate(), nomination.getImageId()));
 				});
 			}
 		});

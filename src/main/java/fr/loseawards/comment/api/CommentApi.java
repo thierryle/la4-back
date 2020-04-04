@@ -101,7 +101,7 @@ public class CommentApi extends AbstractServiceApi {
 	/**
 	 * Crée un commentaire.
 	 * POST http://localhost:8080/_ah/api/loseawards/v1/comments
-	 * @param nominationDTO
+	 * @param commentDTO
 	 * @return
 	 */
 	@ApiMethod(path = "comments", httpMethod = HttpMethod.POST)
@@ -138,12 +138,12 @@ public class CommentApi extends AbstractServiceApi {
 	/**
 	 * Met à jour un commentaire.
 	 * PUT http://localhost:8080/_ah/api/loseawards/v1/comments/6641050231767040
-	 * @param nominationId
-	 * @param nominationDTO
+	 * @param commentId
+	 * @param commentDTO
 	 * @return
 	 */
 	@ApiMethod(path = "comments/{idComment}", httpMethod = HttpMethod.PUT)
-	public CommentDTO updateComment(@Named("commentId") final Long idComment, final CommentDTO commentDTO) {
+	public CommentDTO updateComment(@Named("commentId") final Long commentId, final CommentDTO commentDTO) {
 		Comment comment = Converter.fromDTO(commentDTO);
 		comment.setDate(new Date());
 		getPersistenceService().updateComment(comment);

@@ -1,32 +1,27 @@
 package fr.loseawards.util;
 
-import java.io.UnsupportedEncodingException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.google.appengine.api.datastore.Blob;
-
+import fr.loseawards.archive.dto.ArchiveDTO;
+import fr.loseawards.archiveaward.dto.ArchiveAwardDTO;
+import fr.loseawards.archivecategory.dto.ArchiveCategoryDTO;
+import fr.loseawards.archivereport.dto.ArchiveReportDTO;
+import fr.loseawards.archiveuser.dto.ArchiveUserDTO;
 import fr.loseawards.avatar.dto.AvatarDTO;
 import fr.loseawards.category.dto.CategoryDTO;
 import fr.loseawards.comment.dto.CommentDTO;
 import fr.loseawards.decision.dto.DecisionDTO;
 import fr.loseawards.global.dto.GlobalDTO;
 import fr.loseawards.image.dto.ImageDTO;
-import fr.loseawards.model.Avatar;
-import fr.loseawards.model.Category;
-import fr.loseawards.model.Comment;
-import fr.loseawards.model.Decision;
-import fr.loseawards.model.Global;
-import fr.loseawards.model.Image;
-import fr.loseawards.model.Nomination;
-import fr.loseawards.model.User;
-import fr.loseawards.model.Vote;
+import fr.loseawards.model.*;
 import fr.loseawards.nomination.dto.NominationDTO;
 import fr.loseawards.user.dto.UserDTO;
 import fr.loseawards.vote.dto.VoteDTO;
+
+import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Converter {
 	private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -48,7 +43,7 @@ public class Converter {
 	// ===== Nomination =====
 	
 	public static NominationDTO toDTO(final Nomination nomination) {
-		return new NominationDTO(nomination.getId(), nomination.getUsersIdsAsList(), nomination.getCategoryId(), nomination.getReason(), nomination.getDate(), nomination.getImageId());
+		return new NominationDTO(nomination.getId(), nomination.getUsersIdsAsLong(), nomination.getCategoryId(), nomination.getReason(), nomination.getDate(), nomination.getImageId());
 	}
 	
 	public static List<NominationDTO> toNominationsDTO(final List<Nomination> nominations) {
@@ -149,151 +144,105 @@ public class Converter {
 		return new Global(globalDTO.getId(), globalDTO.getKey(), globalDTO.getValue(), globalDTO.getValuesIds());
 	}
 	
-//	// ===== ArchiveUser =====
-//	
-//	public static ArchiveUserDTO toDTO(final ArchiveUser user) {
-//		return new ArchiveUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getFirstYear(), user.getLastYear());
-//	}
-//	
-//	public static List<ArchiveUserDTO> toArchiveUsersDTO(final List<ArchiveUser> archiveUsers) {
-//		List<ArchiveUserDTO> archiveUsersDTO = new ArrayList<ArchiveUserDTO>();
-//		for (ArchiveUser archiveUser: archiveUsers) {
-//			archiveUsersDTO.add(toDTO(archiveUser));
-//		}
-//		return archiveUsersDTO;
-//	}
-//	
-//	public static ArchiveUser fromDTO(final ArchiveUserDTO archiveUserDTO) {
-//		ArchiveUser archiveUser = new ArchiveUser();
-//		archiveUser.setId(archiveUserDTO.getId());
-//		archiveUser.setFirstName(archiveUserDTO.getFirstName());
-//		archiveUser.setLastName(archiveUserDTO.getLastName());
-//		archiveUser.setFirstYear(archiveUserDTO.getFirstYear());
-//		archiveUser.setLastYear(archiveUserDTO.getLastYear());
-//		return archiveUser;
-//	}
-//	
-//	// ===== ArchiveCategory =====
-//	
-//	public static ArchiveCategoryDTO toDTO(final ArchiveCategory archiveCategory) {
-//		return new ArchiveCategoryDTO(archiveCategory.getId(), archiveCategory.getName());
-//	}
-//	
-//	public static List<ArchiveCategoryDTO> toArchiveCategoriesDTO(final List<ArchiveCategory> archiveCategories) {
-//		List<ArchiveCategoryDTO> archiveCategoriesDTO = new ArrayList<ArchiveCategoryDTO>();
-//		for (ArchiveCategory archiveCategory: archiveCategories) {
-//			archiveCategoriesDTO.add(toDTO(archiveCategory));
-//		}
-//		return archiveCategoriesDTO;
-//	}
-//	
-//	public static ArchiveCategory fromDTO(final ArchiveCategoryDTO archiveCategoryDTO) {
-//		ArchiveCategory archiveCategory = new ArchiveCategory();
-//		archiveCategory.setId(archiveCategoryDTO.getId());
-//		archiveCategory.setName(archiveCategoryDTO.getName());
-//		return archiveCategory;
-//	}
-//	
-//	// ===== Archive =====
-//	
-//	public static ArchiveDTO toDTO(final Archive archive, final List<ArchiveRank> archiveRanks) {
-//		Map<Integer, List<Long>> ranking = new HashMap<Integer, List<Long>>();
-//		if (archiveRanks != null) {
-//			for (ArchiveRank archiveRank : archiveRanks) {
-//				ranking.put(archiveRank.getPosition(), Arrays.asList(archiveRank.getUsersIds()));
-//			}
-//		}
-//		
-//		return new ArchiveDTO(archive.getId(), archive.getYear(), archive.getCategoriesIds(), ranking);
-//	}
-//	
-//	public static List<ArchiveDTO> toArchivesDTO(List<Archive> archives, List<ArchiveRank> archiveRanks) {
-//		// Conversion en DTO
-//		List<ArchiveDTO> archivesDTO = new ArrayList<ArchiveDTO>();
-//		for (Archive archive : archives) {
-//			archivesDTO.add(Converter.toDTO(archive, getArchiveRanksOfYear(archive.getYear(), archiveRanks)));
-//		}
-//		return archivesDTO;
-//	}
-//	
-//	public static List<ArchiveRank> getArchiveRanksOfYear(Integer year, final List<ArchiveRank> archiveRanks) {
-//		if (year == null) {
-//			return null;
-//		}
-//		return Util.getSublistByProperty(archiveRanks, "year", year);
-//	}
-//	
-//	public static Archive fromDTO(final ArchiveDTO archiveDTO) {
-//		Archive archive = new Archive();
-//		archive.setId(archiveDTO.getId());
-//		archive.setYear(archiveDTO.getYear());
-//		if (archiveDTO.getCategoriesIds() != null) {
-//			archive.setCategoriesIds(archiveDTO.getCategoriesIds().toArray(new Long[archiveDTO.getCategoriesIds().size()]));
-//		}
-//		return archive;
-//	}
-//	
-//	// ===== ArchiveRank =====
-//	
-//	public static List<ArchiveRank> fromDTO(final Map<Integer, List<Long>> ranking, final Integer year) {
-//		if (ranking != null) {
-//			List<ArchiveRank> archiveRanks = new ArrayList<ArchiveRank>();
-//			for (Integer rank : ranking.keySet()) {
-//				ArchiveRank archiveRank = new ArchiveRank(null, year, rank, ranking.get(rank));
-//				archiveRanks.add(archiveRank);
-//			}
-//			return archiveRanks;
-//		}
-//		return null;
-//	}
-//	
-//	// ===== ArchiveAward =====
-//	
-//	public static ArchiveAwardDTO toDTO(final ArchiveAward archiveAward) {
-//		return new ArchiveAwardDTO(archiveAward.getId(), archiveAward.getYear(), archiveAward.getCategoryId(), archiveAward.getUsersIds(), archiveAward.getReason());
-//	}
-//	
-//	public static List<ArchiveAwardDTO> toArchiveAwardsDTO(final List<ArchiveAward> archiveAwards) {
-//		List<ArchiveAwardDTO> archiveAwardsDTO = new ArrayList<ArchiveAwardDTO>();
-//		for (ArchiveAward archiveAward : archiveAwards) {
-//			archiveAwardsDTO.add(toDTO(archiveAward));
-//		}
-//		return archiveAwardsDTO;
-//	}
-//	
-//	public static ArchiveAward fromDTO(final ArchiveAwardDTO archiveAwardDTO) {
-//		ArchiveAward archiveAward = new ArchiveAward();
-//		archiveAward.setId(archiveAwardDTO.getId());
-//		archiveAward.setYear(archiveAwardDTO.getYear());
-//		archiveAward.setCategoryId(archiveAwardDTO.getCategoryId());
-//		if (archiveAwardDTO.getUsersIds() != null) {
-//			archiveAward.setUsersIds(archiveAwardDTO.getUsersIds().toArray(new Long[archiveAwardDTO.getUsersIds().size()]));
-//		}
-//		archiveAward.setReason(archiveAwardDTO.getReason());
-//		return archiveAward;
-//	}
-//
-//	// ===== ArchiveReport =====
-//	
-//	public static ArchiveReportDTO toDTO(final ArchiveReport archiveReport) {
-//		return new ArchiveReportDTO(archiveReport.getId(), archiveReport.getYear(), archiveReport.getReport());
-//	}
-//
-//	public static List<ArchiveReportDTO> toArchiveReportsDTO(final List<ArchiveReport> archiveReports) {
-//		List<ArchiveReportDTO> archiveReportsDTO = new ArrayList<ArchiveReportDTO>();
-//		for (ArchiveReport archiveReport : archiveReports) {
-//			archiveReportsDTO.add(toDTO(archiveReport));
-//		}
-//		return archiveReportsDTO;
-//	}
-//	
-//	public static ArchiveReport fromDTO(final ArchiveReportDTO archiveReportDTO) {
-//		ArchiveReport archiveReport = new ArchiveReport();
-//		archiveReport.setId(archiveReportDTO.getId());
-//		archiveReport.setYear(archiveReportDTO.getYear());
-//		archiveReport.setReport(stringToBlob(archiveReportDTO.getReport()));
-//		return archiveReport;
-//	}
+	// ===== ArchiveUser =====
+
+	public static ArchiveUserDTO toDTO(final ArchiveUser user) {
+		return new ArchiveUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getFirstYear(), user.getLastYear());
+	}
+
+	public static List<ArchiveUserDTO> toArchiveUsersDTO(final List<ArchiveUser> archiveUsers) {
+		return archiveUsers.stream().map(Converter::toDTO).collect(Collectors.toList());
+	}
+
+	public static ArchiveUser fromDTO(final ArchiveUserDTO archiveUserDTO) {
+		return new ArchiveUser(archiveUserDTO.getId(), archiveUserDTO.getFirstName(), archiveUserDTO.getLastName(), archiveUserDTO.getFirstYear(), archiveUserDTO.getLastYear());
+	}
+
+	// ===== ArchiveCategory =====
+
+	public static ArchiveCategoryDTO toDTO(final ArchiveCategory archiveCategory) {
+		return new ArchiveCategoryDTO(archiveCategory.getId(), archiveCategory.getName());
+	}
+
+	public static List<ArchiveCategoryDTO> toArchiveCategoriesDTO(final List<ArchiveCategory> archiveCategories) {
+		return archiveCategories.stream().map(Converter::toDTO).collect(Collectors.toList());
+	}
+
+	public static ArchiveCategory fromDTO(final ArchiveCategoryDTO archiveCategoryDTO) {
+		return new ArchiveCategory(archiveCategoryDTO.getId(), archiveCategoryDTO.getName());
+	}
+
+	// ===== Archive =====
+
+	public static ArchiveDTO toDTO(final Archive archive, final List<ArchiveRank> archiveRanks) {
+		Map<Integer, List<Long>> ranking = new HashMap<>();
+		if (archiveRanks != null) {
+			archiveRanks.forEach(archiveRank -> {
+				ranking.put(archiveRank.getPosition(), archiveRank.getUsersIdsAsLong());
+			});
+		}
+
+		return new ArchiveDTO(archive.getId(), archive.getYear(), archive.getCategoriesIdsAsLong(), ranking);
+	}
+
+	public static List<ArchiveDTO> toArchivesDTO(List<Archive> archives, List<ArchiveRank> archiveRanks) {
+		return archives.stream().map(archive -> Converter.toDTO(archive, getArchiveRanksOfYear(archive.getYear(), archiveRanks))).collect(Collectors.toList());
+	}
+
+	public static List<ArchiveRank> getArchiveRanksOfYear(Integer year, final List<ArchiveRank> archiveRanks) {
+		if (year == null) {
+			return null;
+		}
+		return Util.getSublistByProperty(archiveRanks, "year", year);
+	}
+
+	public static Archive fromDTO(final ArchiveDTO archiveDTO) {
+		return new Archive(archiveDTO.getId(), archiveDTO.getYear(), archiveDTO.getCategoriesIds());
+	}
+
+	// ===== ArchiveRank =====
+
+	public static List<ArchiveRank> fromDTO(final Map<Integer, List<Long>> ranking, final Integer year) {
+		if (ranking != null) {
+			List<ArchiveRank> archiveRanks = new ArrayList<>();
+			for (Integer rank : ranking.keySet()) {
+				ArchiveRank archiveRank = new ArchiveRank(null, year, rank, ranking.get(rank));
+				archiveRanks.add(archiveRank);
+			}
+			return archiveRanks;
+		}
+		return null;
+	}
+
+	// ===== ArchiveAward =====
+
+	public static ArchiveAwardDTO toDTO(final ArchiveAward archiveAward) {
+		return new ArchiveAwardDTO(archiveAward.getId(), archiveAward.getYear(), archiveAward.getCategoryIdAsLong(), archiveAward.getUsersIdsAsLong(), archiveAward.getReason());
+	}
+
+	public static List<ArchiveAwardDTO> toArchiveAwardsDTO(final List<ArchiveAward> archiveAwards) {
+		return archiveAwards.stream().map(Converter::toDTO).collect(Collectors.toList());
+	}
+
+	public static ArchiveAward fromDTO(final ArchiveAwardDTO archiveAwardDTO) {
+		return new ArchiveAward(archiveAwardDTO.getId(), archiveAwardDTO.getYear(), archiveAwardDTO.getCategoryId(), archiveAwardDTO.getUsersIds(), archiveAwardDTO.getReason());
+	}
+
+	// ===== ArchiveReport =====
+
+	public static ArchiveReportDTO toDTO(final ArchiveReport archiveReport) {
+		return new ArchiveReportDTO(archiveReport.getId(), archiveReport.getYear(), archiveReport.getMidReportTitle(), archiveReport.getMidReport(),
+				archiveReport.getReportTitle(), archiveReport.getReport());
+	}
+
+	public static List<ArchiveReportDTO> toArchiveReportsDTO(final List<ArchiveReport> archiveReports) {
+		return archiveReports.stream().map(Converter::toDTO).collect(Collectors.toList());
+	}
+
+	public static ArchiveReport fromDTO(final ArchiveReportDTO archiveReportDTO) {
+		return new ArchiveReport(archiveReportDTO.getId(), archiveReportDTO.getYear(), archiveReportDTO.getMidReportTitle(), stringToBlob(archiveReportDTO.getMidReport()),
+				archiveReportDTO.getReportTitle(), stringToBlob(archiveReportDTO.getReport()));
+	}
 	
 	// ===== Blob =====
 	
@@ -306,6 +255,9 @@ public class Converter {
 	}
 	
 	public static Blob stringToBlob(final String string) {
+		if (string == null) {
+			return null;
+		}
 		try {
 			return new Blob(string.getBytes("UTF-8"));
 		} catch (UnsupportedEncodingException e) {

@@ -2,20 +2,15 @@ package fr.loseawards.persistence;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import com.googlecode.objectify.Key;
 
-import fr.loseawards.model.Avatar;
-import fr.loseawards.model.Category;
-import fr.loseawards.model.Comment;
-import fr.loseawards.model.Decision;
-import fr.loseawards.model.Global;
-import fr.loseawards.model.Image;
-import fr.loseawards.model.Nomination;
-import fr.loseawards.model.User;
-import fr.loseawards.model.Vote;
+import fr.loseawards.model.*;
+import fr.loseawards.util.Util;
 
 public class PersistenceService {
 	private static final PersistenceService instance = new PersistenceService();
@@ -238,7 +233,7 @@ public class PersistenceService {
 	
 	/**
 	 * Suppression les nominations d'une catégorie.
-	 * @param userId
+	 * @param categoryId
 	 */
 	public void deleteNominationsOfCategory(Long categoryId) {
 		getNominationsByCategory(categoryId).forEach(nomination -> deleteNomination(nomination.getId()));
@@ -299,7 +294,7 @@ public class PersistenceService {
 //		}
 //		return result;
 		
-		return getNominations().stream().filter(nomination -> nomination.getUsersIdsAsList().stream().anyMatch(userIdOfNomination -> userIdOfNomination.equals(userId))).collect(Collectors.toList());
+		return getNominations().stream().filter(nomination -> nomination.getUsersIdsAsLong().stream().anyMatch(userIdOfNomination -> userIdOfNomination.equals(userId))).collect(Collectors.toList());
 	}
 	
 	/**
@@ -398,7 +393,6 @@ public class PersistenceService {
 	
 	/**
 	 * Supprime toutes les variables globales.
-	 * @param id
 	 */
 	public void deleteGlobals() {
 		ofy().delete().entities(getGlobals());
@@ -436,7 +430,7 @@ public class PersistenceService {
 	 * @return
 	 */
 	public List<Comment> getComments() {
-		return ofy().load().type(Comment.class).order("(-date").list();
+		return ofy().load().type(Comment.class).order("-date").list();
 	}
 
 	/**
@@ -587,7 +581,7 @@ public class PersistenceService {
 	
 	/**
 	 * Retourne les votes d'une catégorie.
-	 * @param voterId
+	 * @param categoryId
 	 * @return
 	 */
 	public List<Vote> getVotesByCategory(Long categoryId) {
@@ -635,5 +629,465 @@ public class PersistenceService {
 	 */
 	public void deleteDecision(Long id) {
 		ofy().delete().type(Decision.class).id(id);
+	}
+
+	// ===== Gestion de la classe ArchiveUser =====
+
+	/**
+	 * Ajoute un utilisateur.
+	 * @param archiveUser
+	 */
+	public void addArchiveUser(ArchiveUser archiveUser) {
+		ofy().save().entity(archiveUser).now();
+	}
+
+	/**
+	 * Met à jour un utilisateur.
+	 * @param archiveUser
+	 */
+	public void updateArchiveUser(ArchiveUser archiveUser) {
+		ArchiveUser oldArchiveUser = ofy().load().type(ArchiveUser.class).id(archiveUser.getId()).now();
+		oldArchiveUser.setFirstName(archiveUser.getFirstName());
+		oldArchiveUser.setLastName(archiveUser.getLastName());
+		oldArchiveUser.setFirstYear(archiveUser.getFirstYear());
+		oldArchiveUser.setLastYear(archiveUser.getLastYear());
+		ofy().save().entity(oldArchiveUser).now();
+	}
+
+	/**
+	 * Supprime un utilisateur.
+	 * @param id
+	 */
+	public void deleteArchiveUser(Long id) {
+		// Suppression des récompenses de l'utilisateur
+//		deleteArchiveAwardsOfUser(id);
+		ofy().delete().type(ArchiveUser.class).id(id);
+	}
+
+	/**
+	 * Supprime tous les utilisateurs.
+	 */
+	public void deleteArchiveUsers() {
+		ofy().delete().entities(getArchiveUsers());
+	}
+
+	/**
+	 * Récupère la liste des utilisateurs.
+	 * @return
+	 */
+	public List<ArchiveUser> getArchiveUsers() {
+		return ofy().load().type(ArchiveUser.class).list();
+	}
+
+	/**
+	 * Retourne un utilisateur.
+	 * @param id
+	 * @return
+	 */
+	public ArchiveUser getArchiveUser(Long id) {
+		return ofy().load().type(ArchiveUser.class).id(id).now();
+	}
+
+	// ===== Gestion de la classe ArchiveCategory =====
+
+	/**
+	 * Retourne une catégorie.
+	 * @param id
+	 * @return
+	 */
+	public ArchiveCategory getArchiveCategory(Long id) {
+		return ofy().load().type(ArchiveCategory.class).id(id).now();
+	}
+
+	/**
+	 * Ajoute une catégorie.
+	 * @param archiveCategory
+	 */
+	public void addArchiveCategory(ArchiveCategory archiveCategory) {
+		ofy().save().entity(archiveCategory).now();
+	}
+
+	/**
+	 * Supprime une catégorie.
+	 * @param id
+	 */
+	public void deleteArchiveCategory(Long id) {
+		deleteArchivesOfCategory(id);
+		ofy().delete().type(ArchiveCategory.class).id(id);
+	}
+
+	/**
+	 * Supprime toutes les catégories.
+	 */
+	public void deleteArchiveCategories() {
+		ofy().delete().entities(getArchiveCategories());
+	}
+
+	/**
+	 * Retourne la liste des catégories.
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public List<ArchiveCategory> getArchiveCategories() {
+		return ofy().load().type(ArchiveCategory.class).order("name").list();
+	}
+
+	/**
+	 * Met à jour une catégorie.
+	 * @param archiveCategory
+	 */
+	public void updateArchiveCategory(ArchiveCategory archiveCategory) {
+		ArchiveCategory oldArchiveCategory = ofy().load().type(ArchiveCategory.class).id(archiveCategory.getId()).now();
+		oldArchiveCategory.setName(archiveCategory.getName());
+		ofy().save().entity(oldArchiveCategory).now();
+	}
+
+	// ===== Gestion de la classe Archive
+
+	/**
+	 * Retourne une archive.
+	 * @param id
+	 * @return
+	 */
+	public Archive getArchive(Long id) {
+		return ofy().load().type(Archive.class).id(id).now();
+	}
+
+	/**
+	 * Retourne l'archive d'une année.
+	 * @param year
+	 * @return
+	 */
+	public Archive getArchiveByYear(Integer year) {
+		List<Archive> result = ofy().load().type(Archive.class).filter("year", year).list();
+		if (result == null || result.isEmpty()) {
+			return null;
+		}
+		return result.get(0);
+	}
+
+	/**
+	 * Ajoute une archive.
+	 * @param archive
+	 */
+	public void addArchive(Archive archive) {
+		ofy().save().entity(archive).now();
+	}
+
+	/**
+	 * Met à jour une archive.
+	 * @param archive
+	 */
+	public void updateArchive(Archive archive) {
+		Archive oldArchive = ofy().load().type(Archive.class).id(archive.getId()).now();
+		oldArchive.setYear(archive.getYear());
+		oldArchive.setCategoriesIds(archive.getCategoriesIds());
+		ofy().save().entity(oldArchive).now();
+	}
+
+	/**
+	 * Supprime une archive.
+	 * @param id
+	 */
+	public void deleteArchive(Long id) {
+		Archive archive = getArchive(id);
+
+		// Suppression des récompenses, rangs et compte-rendu de cette année
+		deleteArchiveAwardsOfYear(archive.getYear());
+		deleteArchiveRanksOfYear(archive.getYear());
+		deleteArchiveReportOfYear(archive.getYear());
+		ofy().delete().type(Archive.class).id(id);
+	}
+
+	/**
+	 * Supprime l'archive d'une année.
+	 * @param year
+	 */
+	public void deleteArchiveOfYear(Integer year) {
+		Archive archive = getArchiveByYear(year);
+		if (archive != null) {
+			deleteArchive(archive.getId());
+		}
+	}
+
+	/**
+	 * Supprime les archives d'une catégorie.
+	 * @param categoryId
+	 */
+	public void deleteArchivesOfCategory(Long categoryId) {
+		List<Archive> archives = getArchives();
+		for (Archive archive: archives) {
+			if (archive.getCategoriesIdsAsLong().contains(categoryId)) {
+				deleteArchive(archive.getId());
+			}
+		}
+	}
+
+	/**
+	 * Récupère la liste des archive.
+	 * @return
+	 */
+	public List<Archive> getArchives() {
+		return ofy().load().type(Archive.class).order("-year").list();
+	}
+
+	// ===== Gestion de la classe ArchiveRank =====
+
+	/**
+	 * Ajoute un rang.
+	 * @param archiveRank
+	 */
+	public void addArchiveRank(ArchiveRank archiveRank) {
+		ofy().save().entity(archiveRank).now();
+	}
+
+	/**
+	 * Retourne un rang.
+	 * @param id
+	 * @return
+	 */
+	public ArchiveRank getArchiveRank(Long id) {
+		return ofy().load().type(ArchiveRank.class).id(id).now();
+	}
+
+	/**
+	 * Retourne tous les rangs.
+	 * @return
+	 */
+	public List<ArchiveRank> getArchiveRanks() {
+		return ofy().load().type(ArchiveRank.class).order("year").list();
+	}
+
+	/**
+	 * Retourne les rangs d'une année.
+	 * @param year
+	 * @return
+	 */
+	public List<ArchiveRank> getArchiveRanksByYear(Integer year) {
+		return ofy().load().type(ArchiveRank.class).filter("year", year).list();
+	}
+
+	/**
+	 * Retourne les rangs d'un utilisageur.
+	 * @param userId
+	 * @return
+	 */
+	public List<ArchiveRank> getArchiveRanksByUser(Long userId) {
+		List<ArchiveRank> archiveRanks = new ArrayList<>();
+
+		List<ArchiveRank> result = getArchiveRanks();
+		result.forEach(archiveRank -> {
+			List<Long> usersIds = archiveRank.getUsersIdsAsLong();
+			if (usersIds != null && usersIds.contains(userId)) {
+				archiveRanks.add(archiveRank);
+			}
+		});
+		return archiveRanks;
+	}
+
+	/**
+	 * Supprime un rang.
+	 * @param id
+	 */
+	public void deleteArchiveRank(Long id) {
+		ofy().delete().type(ArchiveRank.class).id(id);
+	}
+
+	/**
+	 * Supprime les rangs d'une année.
+	 * @param year
+	 */
+	public void deleteArchiveRanksOfYear(Integer year) {
+		List<ArchiveRank> archiveRanks = getArchiveRanksByYear(year);
+		ofy().delete().entities(archiveRanks);
+	}
+
+	// ===== Gestion de la classe ArchiveAward =====
+
+	/**
+	 * Ajoute une récompense.
+	 * @param archiveAward
+	 */
+	public void addArchiveAward(ArchiveAward archiveAward) {
+		ofy().save().entity(archiveAward).now();
+	}
+
+	/**
+	 * Retourne une récompense.
+	 * @param id
+	 * @return
+	 */
+	public ArchiveAward getArchiveAward(Long id) {
+		return ofy().load().type(ArchiveAward.class).id(id).now();
+	}
+
+	/**
+	 * Retourne toutes les récompenses.
+	 * @return
+	 */
+	public List<ArchiveAward> getArchiveAwards() {
+		return ofy().load().type(ArchiveAward.class).list();
+	}
+
+	/**
+	 * Retourne les récompenses d'une année.
+	 * @param year
+	 * @return
+	 */
+	public List<ArchiveAward> getArchiveAwardsByYear(Integer year) {
+		return ofy().load().type(ArchiveAward.class).filter("year", year).list();
+	}
+
+	/**
+	 * Retourne les récompenses d'une catégorie.
+	 * @param categoryId
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public List<ArchiveAward> getArchiveAwardsByCategory(Long categoryId) {
+		Key<ArchiveCategory> categoryKey = null;
+		if (categoryId != null) {
+			categoryKey = Key.create(ArchiveCategory.class, categoryId);
+		}
+		return ofy().load().type(ArchiveAward.class).filter("categoryId", categoryKey).list();
+	}
+
+	/**
+	 * Retourne les récompenses d'un utilisateur.
+	 * @param userId
+	 * @return
+	 */
+	public List<ArchiveAward> getArchiveAwardsByUser(Long userId) {
+		List<ArchiveAward> archiveAwards = new ArrayList<>();
+
+		List<ArchiveAward> result = getArchiveAwards();
+		result.forEach(archiveAward -> {
+			List<Long> usersIds = archiveAward.getUsersIdsAsLong();
+			if (usersIds != null && usersIds.contains(userId)) {
+				archiveAwards.add(archiveAward);
+			}
+		});
+		return archiveAwards;
+	}
+
+	/**
+	 * Supprime une récompense.
+	 * @param id
+	 */
+	public void deleteArchiveAward(Long id) {
+		ofy().delete().type(ArchiveAward.class).id(id);
+	}
+
+	/**
+	 * Supprime les récompenses d'une année.
+	 * @param year
+	 */
+	public void deleteArchiveAwardsOfYear(Integer year) {
+		List<ArchiveAward> archiveAwards = getArchiveAwardsByYear(year);
+		for (ArchiveAward archiveAward : archiveAwards) {
+			deleteArchiveAward(archiveAward.getId());
+		}
+	}
+
+	/**
+	 * Supprime toutes les récompenses.
+	 */
+	public void deleteArchiveAwards() {
+		List<ArchiveAward> archiveAwards = getArchiveAwards();
+		for (ArchiveAward archiveAward : archiveAwards) {
+			deleteArchiveAward(archiveAward.getId());
+		}
+//		List<Key<ArchiveAward>> keys = ofy().load().type(ArchiveAward.class).keys().list();
+//		ofy().delete().keys(keys).now();
+	}
+
+	/**
+	 * Supprime les récompenses d'un utilisateur.
+	 * @param userId
+	 */
+	public void deleteArchiveAwardsOfUser(Long userId) {
+		List<ArchiveAward> archiveAwards = getArchiveAwards();
+		ofy().delete().entities(archiveAwards);
+	}
+
+	// ===== Gestion de la classe ArchiveReport =====
+
+	/**
+	 * Ajoute un compte-rendu.
+	 * @param archiveReport
+	 */
+	public void addArchiveReport(ArchiveReport archiveReport) {
+		ofy().save().entity(archiveReport).now();
+	}
+
+	/**
+	 * Met à jour un compte-rendu.
+	 * @param archiveReport
+	 */
+	public void updateArchiveReport(ArchiveReport archiveReport) {
+		ArchiveReport oldArchiveReport = ofy().load().type(ArchiveReport.class).id(archiveReport.getId()).now();
+		oldArchiveReport.setYear(archiveReport.getYear());
+		oldArchiveReport.setMidReportTitle(archiveReport.getMidReportTitle());
+		oldArchiveReport.setMidReport(archiveReport.getMidReport());
+		oldArchiveReport.setReportTitle(archiveReport.getReportTitle());
+		oldArchiveReport.setReport(archiveReport.getReport());
+		ofy().save().entity(oldArchiveReport).now();
+	}
+
+	/**
+	 * Supprime un compte-rendu.
+	 * @param id
+	 */
+	public void deleteArchiveReport(Long id) {
+		ofy().delete().type(ArchiveReport.class).id(id);
+	}
+
+	/**
+	 * Supprime tous les comptes-rendus.
+	 */
+	public void deleteArchiveReports() {
+		List<ArchiveReport> reports = getArchiveReports();
+		ofy().delete().entities(reports);
+	}
+
+	/**
+	 * Récupère la liste des compte-rendus (par ordre décroissant d'année).
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public List<ArchiveReport> getArchiveReports() {
+		return ofy().load().type(ArchiveReport.class).order("-year").list();
+	}
+
+	/**
+	 * Retourne un compte-rendu
+	 * @param id
+	 * @return
+	 */
+	public ArchiveReport getArchiveReport(Long id) {
+		return ofy().load().type(ArchiveReport.class).id(id).now();
+	}
+
+	/**
+	 * Récupère le compte-rendu d'une année.
+	 * @return
+	 */
+	public ArchiveReport getArchiveReportOfYear(Integer year) {
+		List<ArchiveReport> result = ofy().load().type(ArchiveReport.class).filter("year", year).list();
+		if (result != null && !result.isEmpty()) {
+			return result.get(0);
+		}
+		return null;
+	}
+
+	/**
+	 * Supprime un compte-rendu.
+	 * @param year
+	 */
+	public void deleteArchiveReportOfYear(Integer year) {
+		ArchiveReport archiveReport = getArchiveReportOfYear(year);
+		if (archiveReport != null) {
+			deleteArchiveReport(archiveReport.getId());
+		}
 	}
 }

@@ -228,7 +228,7 @@ public class Util {
 	 * @return
 	 */
 	public static List<Long> getMostRecurrentElements(final List<Long> elements, final List<Long> restrictions) {
-		List<Long> results = new ArrayList<Long>();
+		List<Long> results = new ArrayList<>();
 		
 		if (elements == null || elements.isEmpty()) {
 			return results;

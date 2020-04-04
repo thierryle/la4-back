@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiMethod.HttpMethod;
@@ -15,11 +16,15 @@ import fr.loseawards.AbstractServiceApi;
 import fr.loseawards.category.api.CategoryApi;
 import fr.loseawards.global.api.GlobalApi;
 import fr.loseawards.home.dto.HomeBundleDTO;
+import fr.loseawards.model.Category;
+import fr.loseawards.model.Comment;
 import fr.loseawards.model.Nomination;
+import fr.loseawards.model.User;
 import fr.loseawards.nomination.api.NominationApi;
 import fr.loseawards.nomination.dto.NominationDTO;
 import fr.loseawards.user.api.UserApi;
 import fr.loseawards.util.Converter;
+import fr.loseawards.vote.api.VoteApi;
 
 public class HomeApi extends AbstractServiceApi {
 	private static final int NOMINATIONS_NUMBER = 5;
@@ -27,7 +32,7 @@ public class HomeApi extends AbstractServiceApi {
 	protected UserApi userApi = null;
 	protected CategoryApi categoryApi = null;
 	protected GlobalApi globalApi = null;
-//	protected VoteApi voteApi = null;
+	protected VoteApi voteApi = null;
 	protected NominationApi nominationApi = null;
 	
 	/**
@@ -44,10 +49,10 @@ public class HomeApi extends AbstractServiceApi {
 		
 		// Récupération des nominations
 		List<Nomination> nominations = getPersistenceService().getOrderedNominations();
-		homeBundleDTO.setTotalNominations(Integer.valueOf(nominations.size()));
+		homeBundleDTO.setTotalNominations(nominations.size());
 		
 		// Conversion en DTO des 5 dernières nominations
-		List<NominationDTO> nominationsDTO = new ArrayList<NominationDTO>();
+		List<NominationDTO> nominationsDTO = new ArrayList<>();
 		for (int i = 0; i < nominations.size() && i < NOMINATIONS_NUMBER; i++) {
 			Nomination nomination = nominations.get(i);
 			nominationsDTO.add(Converter.toDTO(nomination));
@@ -55,28 +60,23 @@ public class HomeApi extends AbstractServiceApi {
 		homeBundleDTO.setNominations(nominationsDTO);
 		
 		// Statistiques (nombre de nominations par utilisateur)
-		final Map<Long, Integer> stats = new HashMap<Long, Integer>();
+		final Map<Long, Integer> stats = new HashMap<>();
 		for (Nomination nomination: nominations) {
-			nomination.getUsersIdsAsList().forEach(userId -> {
+			nomination.getUsersIdsAsLong().forEach(userId -> {
 				Integer count = stats.get(userId);
 				if (count == null) {
-					count = Integer.valueOf(1);
+					count = 1;
 				} else {
-					count = Integer.valueOf(count.intValue() + 1);
+					count = count + 1;
 				}
 				stats.put(userId, count);
 			});
 		}
 		
 		// Tri par nombre de nominations
-		List<Long> sortedUsers = new ArrayList<Long>(stats.keySet());
-		Collections.sort(sortedUsers, new Comparator<Long>() {
-			@Override
-			public int compare(Long u1, Long u2) {
-				return stats.get(u2).compareTo(stats.get(u1));				
-			}
-		});
-		Map<Long, Integer> sortedStats = new LinkedHashMap<Long, Integer>();
+		List<Long> sortedUsers = new ArrayList<>(stats.keySet());
+		Collections.sort(sortedUsers, (u1, u2) -> stats.get(u2).compareTo(stats.get(u1)));
+		Map<Long, Integer> sortedStats = new LinkedHashMap<>();
 		for (Long userId : sortedUsers) {
 			sortedStats.put(userId, stats.get(userId));
 		}		
@@ -87,73 +87,62 @@ public class HomeApi extends AbstractServiceApi {
 		
 		return homeBundleDTO;
 	}
-	
+
 	/**
 	 * Réinitialise le site.
-	 * http://localhost:8888/api/home/reset
+	 * GET http://localhost:8080/_ah/api/loseawards/v1/home/reset
 	 */
-//	@DELETE
-//	@Path("/reset")
-//	public void reset() {
-//		getVoteApi().deleteVotes();
-//		getNominationApi().deleteNominations();
-//		getCategoryApi().deleteCategories();
-//	}
+	@ApiMethod(path = "home/reset", httpMethod = HttpMethod.DELETE)
+	public void reset() {
+		getVoteApi().deleteVotes();
+		getNominationApi().deleteNominations();
+		getCategoryApi().deleteCategories();
+	}
 	
 	/**
 	 * Nettoie la base de données.
-	 * http://localhost:8888/api/home/clean
+	 * GET http://localhost:8080/_ah/api/loseawards/v1/home/clean
 	 */
-//	@GET
-//	@Path("/clean")
-//	public void clean() {
-//		// Récupération des catégories et extraction des ID
-//		List<Category> categories = getPersistenceService().getCategories();
-//		List<Long> categoriesIds = new ArrayList<Long>();
-//		for (Category category: categories) {
-//			categoriesIds.add(category.getId());
-//		}
-//		
-//		// Récupération des utilisateurs et extraction des ID
-//		List<User> users = getPersistenceService().getUsers();
-//		List<Long> usersIds = new ArrayList<Long>();
-//		for (User user: users) {
-//			usersIds.add(user.getId());
-//		}
-//		
-//		// Récupération des nominations et vérification que la catégorie et les utilisateurs existent toujours
-//		List<Nomination> nominations = getPersistenceService().getNominations();
-//		List<Long> nominationsIds = new ArrayList<Long>();
-//		for (Nomination nomination : nominations) {
-//			if (nomination.getCategoryId() == null || nomination.getUsersIds() == null || !categoriesIds.contains(nomination.getCategoryId())) {
-//				getPersistenceService().deleteNomination(nomination.getId());
-//			} else {
-//				boolean deleted = false;
-//				for (Long userId : nomination.getUsersIds()) {
-//					if (!usersIds.contains(userId)) {
-//						getPersistenceService().deleteNomination(nomination.getId());
-//						deleted = true;
-//						break;
-//					}
-//				}
-//				if (!deleted) {
-//					nominationsIds.add(nomination.getId());
-//				}
-//			}
-//		}
-//		
-//		// Récupération des commentaires et vérification que la nomination et l'utilisateur existent toujours
-//		List<Comment> comments = getPersistenceService().getComments();
-//		for (Comment comment : comments) {
-//			if (comment.getAuthorId() == null || comment.getNominationId() == null || !usersIds.contains(comment.getAuthorId()) || !nominationsIds.contains(comment.getNominationId())) {
-//				getPersistenceService().deleteComment(comment.getId());
-//			}
-//		}
-//	}
+	@ApiMethod(path = "home/clean", httpMethod = HttpMethod.GET)
+	public void clean() {
+		// Récupération des catégories et extraction des ID
+		List<Category> categories = getPersistenceService().getCategories();
+		List<Long> categoriesIds = categories.stream().map(category -> category.getId()).collect(Collectors.toList());
+
+		// Récupération des utilisateurs et extraction des ID
+		List<User> users = getPersistenceService().getUsers();
+		List<Long> usersIds = users.stream().map(user -> user.getId()).collect(Collectors.toList());
+
+		// Récupération des nominations et vérification que la catégorie et les utilisateurs existent toujours
+		List<Nomination> nominations = getPersistenceService().getNominations();
+		List<Long> nominationsIds = new ArrayList<>();
+		for (Nomination nomination : nominations) {
+			if (nomination.getCategoryId() == null || nomination.getUsersIds() == null || !categoriesIds.contains(nomination.getCategoryId())) {
+				getPersistenceService().deleteNomination(nomination.getId());
+			} else {
+				boolean deleted = false;
+				for (Long userId : nomination.getUsersIdsAsLong()) {
+					if (!usersIds.contains(userId)) {
+						getPersistenceService().deleteNomination(nomination.getId());
+						deleted = true;
+						break;
+					}
+				}
+				if (!deleted) {
+					nominationsIds.add(nomination.getId());
+				}
+			}
+		}
+
+		// Récupération des commentaires et vérification que la nomination et l'utilisateur existent toujours
+		List<Comment> comments = getPersistenceService().getComments();
+		comments.stream().filter(comment -> comment.getAuthorId() == null || comment.getNominationId() == null || !usersIds.contains(comment.getAuthorId()) || !nominationsIds.contains(comment.getNominationId())).forEach(comment -> {
+			getPersistenceService().deleteComment(comment.getId());
+		});
+	}
 		
 	protected UserApi getUserApi() {
 		if (userApi == null) {
-//			userApi = resourceContext.getResource(UserApi.class);
 			userApi = new UserApi();
 		}
 		return userApi;
@@ -161,7 +150,6 @@ public class HomeApi extends AbstractServiceApi {
 	
 	protected CategoryApi getCategoryApi() {
 		if (categoryApi == null) {
-//			categoryApi = resourceContext.getResource(CategoryApi.class);
 			categoryApi = new CategoryApi();
 		}
 		return categoryApi;
@@ -169,22 +157,20 @@ public class HomeApi extends AbstractServiceApi {
 	
 	protected GlobalApi getGlobalApi() {
 		if (globalApi == null) {
-//			globalApi = resourceContext.getResource(GlobalApi.class);
 			globalApi = new GlobalApi();
 		}
 		return globalApi;
 	}
 	
-//	protected VoteApi getVoteApi() {
-//		if (voteApi == null) {
-//			voteApi = resourceContext.getResource(VoteApi.class);
-//		}
-//		return voteApi;
-//	}
+	protected VoteApi getVoteApi() {
+		if (voteApi == null) {
+			voteApi = new VoteApi();
+		}
+		return voteApi;
+	}
 	
 	protected NominationApi getNominationApi() {
 		if (nominationApi == null) {
-//			nominationApi = resourceContext.getResource(NominationApi.class);
 			nominationApi = new NominationApi();
 		}
 		return nominationApi;

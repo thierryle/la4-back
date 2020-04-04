@@ -8,7 +8,15 @@
     <servlet-class>com.google.api.server.spi.EndpointsServlet</servlet-class>
     <init-param>
         <param-name>services</param-name>
-        <param-value>fr.loseawards.user.api.UserApi,fr.loseawards.home.api.HomeApi,fr.loseawards.category.api.CategoryApi,fr.loseawards.nomination.api.NominationApi,fr.loseawards.avatar.api.AvatarApi,fr.loseawards.image.api.ImageApi,fr.loseawards.global.api.GlobalApi,fr.loseawards.comment.api.CommentApi,fr.loseawards.vote.api.VoteApi,fr.loseawards.decision.api.DecisionApi</param-value>
+        <param-value>
+            fr.loseawards.user.api.UserApi,fr.loseawards.home.api.HomeApi,fr.loseawards.category.api.CategoryApi,
+            fr.loseawards.nomination.api.NominationApi,fr.loseawards.avatar.api.AvatarApi,fr.loseawards.image.api.ImageApi,
+            fr.loseawards.global.api.GlobalApi,fr.loseawards.comment.api.CommentApi,fr.loseawards.vote.api.VoteApi,
+            fr.loseawards.decision.api.DecisionApi,fr.loseawards.archiveuser.api.ArchiveUserApi,
+            fr.loseawards.archivecategory.api.ArchiveCategoryApi,fr.loseawards.archive.api.ArchiveApi,
+            fr.loseawards.archiveaward.api.ArchiveAwardApi,fr.loseawards.archivereport.api.ArchiveReportApi,
+            fr.loseawards.backup.api.RestoreApi,fr.loseawards.backup.api.BackupApi
+        </param-value>
     </init-param>
     <init-param>
         <param-name>restricted</param-name>
